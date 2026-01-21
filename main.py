@@ -84,7 +84,7 @@ def send_email_notification(course_id, success=True):
         print("请检查邮箱配置是否正确")
 
 
-def main(username, password, subject_id, course_id):
+def main(username, password, course_id):
     """主函数：执行UCAS选课流程"""
 
     # 自动安装适配版本的 ChromeDriver，并返回其路径
@@ -282,7 +282,11 @@ def main(username, password, subject_id, course_id):
                     break
                 else:
                     print(f"[{datetime.datetime.now()}] 课程已满，3秒后刷新重试...")
-                    sleep(3)
+                    #####
+                    # 实际选课的时候这里要加强！！！缩短点 不然抢不过他们
+                    #####
+                    sleep(1.5)
+                    # sleep(3)
                     driver.refresh()
                     sleep(1)
 
@@ -471,16 +475,15 @@ def main(username, password, subject_id, course_id):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='UCAS选课自动抢课脚本')
-    parser.add_argument('username', help='用户名（邮箱）')
-    parser.add_argument('password', help='密码')
-    parser.add_argument('subjectID', help='学院ID（暂未使用）')
-    parser.add_argument('courseID', help='课程编码')
+    parser.add_argument('--username', required=True, help='用户名（邮箱）')
+    parser.add_argument('--password', required=True, help='密码')
+    parser.add_argument('--courseID', required=True, help='课程编码')
     parser.add_argument('--noCaptcha', action='store_true', help='无验证码模式（暂未使用）')
 
     args = parser.parse_args()
 
     # 调用主函数
-    success = main(args.username, args.password, args.subjectID, args.courseID)
+    success = main(args.username, args.password, args.courseID)
 
     if success:
         print("\n🎉 选课成功！")
