@@ -254,11 +254,99 @@ def main(username, password, course_id):
             course_code_input.send_keys(course_id)
             print("✓ 已输入课程编码")
 
-            query_button = wait.until(EC.element_to_be_clickable((By.ID, 'submitBtn')))
-            query_button.click()
-            print("✓ 已点击查询按钮")
+            # 使用回车键提交，比点击按钮更稳定
+            print("提交查询（使用回车键）...")
+            from selenium.webdriver.common.keys import Keys
+            course_code_input.send_keys(Keys.RETURN)
+            print("✓ 已发送回车键")
 
+            # 等待页面响应
             sleep(3)
+            print("等待查询结果加载...")
+
+            # 重新获取元素（防止页面刷新导致元素失效）
+            query_wait = WebDriverWait(driver, 30)
+
+            # 自定义等待条件：tbody有内容
+            def tbody_has_content(driver):
+                try:
+                    # 每次都重新查找元素，防止 StaleElementReferenceException
+                    tbody = driver.find_element(By.ID, 'courseinfo')
+                    inner_html = tbody.get_attribute('innerHTML').strip()
+
+                    # 检查是否有实际内容（不只是空白）
+                    if len(inner_html) > 50:  # 有实际内容
+                        rows = tbody.find_elements(By.TAG_NAME, 'tr')
+                        if len(rows) > 0:
+                            print(f"  ✓ 检测到 {len(rows)} 行课程数据")
+                            return True
+                    return False
+                except Exception:
+                    return False
+
+            print("监控tbody内容变化（最长等待30秒）...")
+            try:
+                query_wait.until(tbody_has_content)
+                print("✓ 查询结果已成功加载")
+                sleep(2)  # 额外等待确保JS完全执行
+
+                # 验证复选框是否存在
+                try:
+                    checkbox = driver.find_element(By.XPATH, "//tbody[@id='courseinfo']//input[@type='checkbox']")
+                    print("✓ 课程复选框已就绪")
+                except Exception:
+                    print("⚠️ 未找到复选框，但tbody有内容，继续执行...")
+
+            except Exception:
+                print("⚠️ 等待超时（30秒）")
+                print("\n=== 详细调试信息 ===")
+                try:
+                    # 检查当前URL
+                    current_url = driver.current_url
+                    print(f"当前URL: {current_url}")
+
+                    # 检查tbody内容
+                    tbody = driver.find_element(By.ID, 'courseinfo')
+                    tbody_html = tbody.get_attribute('innerHTML').strip()
+                    print(f"tbody内容长度: {len(tbody_html)} 字符")
+
+                    if len(tbody_html) == 0:
+                        print("\n❌ tbody完全为空！")
+                        print("可能原因:")
+                        print("  1. 课程编号不存在或错误")
+                        print("  2. 查询未成功执行（页面可能要求先选择院系）")
+                        print("  3. 网络延迟或服务器无响应")
+
+                        # 检查输入框的值是否还在
+                        try:
+                            code_input = driver.find_element(By.ID, 'courseCode')
+                            input_value = code_input.get_attribute('value')
+                            print(f"\n课程编码输入框当前值: '{input_value}'")
+                            if input_value != course_id:
+                                print("  ⚠️ 输入框的值已改变，可能页面刷新了")
+                        except:
+                            pass
+
+                    else:
+                        print(f"\n✓ tbody有内容，前500字符:")
+                        print(f"{tbody_html[:500]}")
+
+                    # 检查是否有错误提示
+                    try:
+                        alert_elements = driver.find_elements(By.CLASS_NAME, 'alert')
+                        for alert in alert_elements:
+                            if alert.is_displayed():
+                                print(f"\n页面提示: {alert.text[:300]}")
+                    except:
+                        pass
+
+                    # 保存完整页面用于调试
+                    with open('debug_query_timeout.html', 'w', encoding='utf-8') as f:
+                        f.write(driver.page_source)
+                    print("\n完整页面已保存到: debug_query_timeout.html")
+
+                except Exception as debug_e:
+                    print(f"\n获取调试信息失败: {str(debug_e)}")
 
         except Exception as e:
             print(f"✗ 查询课程失败: {str(e)[:200]}")
@@ -285,7 +373,7 @@ def main(username, password, course_id):
                     #####
                     # 实际选课的时候这里要加强！！！缩短点 不然抢不过他们
                     #####
-                    sleep(1.5)
+                    sleep(15)
                     # sleep(3)
                     driver.refresh()
                     sleep(1)
@@ -387,7 +475,7 @@ def main(username, password, course_id):
                             query_button = wait.until(EC.element_to_be_clickable((By.ID, 'submitBtn')))
                             query_button.click()
                             print("✓ 重新点击查询按钮")
-                            sleep(2)
+                            sleep(3)
 
                             first_course_checkbox = wait.until(
                                 EC.presence_of_element_located((By.XPATH, "//table//tbody/tr[1]//input[@type='checkbox']"))

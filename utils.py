@@ -84,4 +84,3 @@ def ocrCal(image, import_onnx_path, charsets_path):
 
 
     
-

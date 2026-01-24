@@ -1,116 +1,286 @@
-# 国科大自动选课  
-# 国科大选课 全自动
-# UCAS Automatic course selection 
+# UCAS 选课自动抢课脚本
 
-**无须输入验证码，可以自动识别验证码** 基于[ddddocr](https://github.com/sml2h3/ddddocr)和[dddd_trainer](https://github.com/sml2h3/dddd_trainer)  
+一个用于中国科学院大学（UCAS）的自动选课脚本，支持自动登录、课程监控、验证码识别和邮件通知功能。
 
-***目前只在非高峰时期测试过，帮助大家捡漏有人退课的课，目前还不完善，在高峰期间使用可能存在bug，需要调整sleep的时间等，<span style="color:red; font-weight:bold;">禁止恶意抢课</span>，如有bug，欢迎发起issue***
+**无须手动输入验证码，可以自动识别验证码** 基于 [ddddocr](https://github.com/sml2h3/ddddocr)
 
+## ✨ 功能特性
 
-## 使用方法 
-`python main.py {yourUSERNAME} {yourPASSWORD} {SUBJECTID} {COURSEID} --driverPath --noCaptcha`  
-*输入的时候不需要输入`{}`*   
+- 🔐 **自动登录**：支持自动登录 UCAS 选课系统，带重试机制（最多 10 次）
+- 🔄 **智能监控**：实时监控课程是否有空位，每 1.5 秒自动刷新
+- 🤖 **验证码识别**：使用 ddddocr 自动识别纯数字验证码，支持前导零，识别准确率高
+- 🔁 **自动重试**：验证码识别失败或提交失败自动重试（最多 10 次提交尝试，每次最多 5 次识别尝试）
+- 📧 **邮件通知**：选课成功或失败后自动发送邮件通知（支持 163 邮箱）
+- 📝 **详细日志**：完整的执行日志，方便调试和查看进度
+- 🛡️ **错误处理**：完善的异常处理机制，自动保存 HTML 页面用于调试
 
-- yourUSERNAME 例如 zhangsan@mails.ucas.ac.cn
-- PASSWORD 输入自己的sep登录密码
-- SUBJECTID 学院对应的- ID，目前只可选一个学院，如需增加可以在代码中自行修改
-- COURSEID 课程编码，可在学期课表或选择课程中查找
-- driverPath 如果没有chrome浏览器需要下载chrome浏览器，默认路径在`C:\Program Files\Google\Chrome\Application`，根据自己路径调整，为可选参数，如果不在默认路径下，需要修改默认路径
-- noCaptcha 为可选参数，有时登录界面不需要验证码，此时需要加上--noCaptcha，需要验证码时，不需要加该参数
+## 📋 环境要求
 
-例如，  
-我的账户为zhangsan@mails.ucas.ac.cn   
-密码为love1234 SUBJECTID选择计算机学院，也就是id_951， 见下面学院和id一一对应    
-COURSEID，假设为081202M04002H  
-driverPath，假设不在默认路径下，在`D:\Programs\Google\Chrome\Application`   
-此时登录界面有验证码：  
-`python main.py zhangsan@mails.ucas.ac.cn love1234 id_951 081202M04002H --driverPath D:/Programs/Google/Chrome/Application`  
-如果登录界面无验证码： 
-`python main.py zhangsan@mails.ucas.ac.cn love1234 id_951 081202M04002H  --noCaptcha`  
-如果driverPath在默认路径下，且登录界面有验证码:  
-`python main.py zhangsan@mails.ucas.ac.cn love1234 id_951 081202M04002H`  
+- Python 3.7+
+- Chrome 浏览器
+- ChromeDriver（脚本会自动安装）
 
+## 🔧 安装依赖
 
-## 1. 安装所需依赖 
-`pip install -r requirements.txt -i https://pypi.douban.com/simple` 
-python的版本为3.9.16  
-
-## 2. clone本项目到本地   
-`git clone https://github.com/lizhuoq/UCAS-Course-selection-script.git`
-
-## 3.学院和- ID对应 
-```
-{
-    "数学学院": "id_910",
-    "物理学院": "id_911",
-    "天文学院": "id_957",
-    "化学学院": "id_912",
-    "材料学院": "id_928",
-    "生命学院": "id_913",
-    "地球学院": "id_914",
-    "资环学院": "id_921",
-    "计算机学院": "id_951",
-    "电子学院": "id_952",
-    "工程学院": "id_958",
-    "经管学院": "id_917",
-    "公管学院": "id_945",
-    "人文学院": "id_927",
-    "马克思主义学院": "id_964",
-    "外语系": "id_915",
-    "中丹学院": "id_954",
-    "国际学院": "id_955",
-    "存济医学院": "id_959",
-    "体育部": "id_946",
-    "集成电路学院": "id_961",
-    "未来技术学院": "id_962",
-    "网络空间安全学院": "id_963",
-    "心理学系": "id_968",
-    "人工智能学院": "id_969",
-    "纳米科学与技术学院": "id_970",
-    "艺术中心": "id_971",
-    "光电学院": "id_972",
-    "现代产业学院": "id_967",
-    "核学院": "id_973",
-    "现代农业科学学院": "id_974",
-    "化学工程学院": "id_975",
-    "海洋学院": "id_976",
-    "航空宇航学院": "id_977",
-    "应急管理科学与工程学院": "id_987",
-    "人居科学学院": "id_989",
-    "MBA": "id_950",
-    "MPA": "id_965",
-    "MEMEM": "id_990",
-    "密码学院": "id_988",
-    "前沿交叉科学学院": "id_993"
-}
+```bash
+pip install -r requirements.txt -i https://pypi.douban.com/simple
 ```
 
-## 4.data文件和model文件
+主要依赖包：
+- `selenium` - 浏览器自动化
+- `python-dotenv` - 环境变量管理
+- `ddddocr` - 验证码识别
+- `chromedriver-autoinstaller` - 自动安装 ChromeDriver
+
+## ⚙️ 配置
+
+### 1. 邮箱配置
+
+在项目根目录创建 `.env` 文件，配置您的邮箱信息：
+
+```env
+# Email configuration information
+SMTP_SERVER=smtp.163.com
+SMTP_PORT=465
+SENDER_EMAIL=your_email@163.com
+SENDER_PASSWORD=your_authorization_code
+RECIPIENT_EMAIL=target_email@qq.com
 ```
-data/ 
-|---- labels.txt
-|---- images
-            |----...num.png
-``` 
-labels 每行内容为  
-num值.png\t1+1=?\n  
-\t为制表符，\n为换行符 
 
-利用[dddd_trainer](https://github.com/sml2h3/dddd_trainer)训练  
+**重要提示：**
+- `SENDER_PASSWORD` 是 163 邮箱的**授权码**，不是邮箱登录密码
+- 需要在 163 邮箱设置中开启 SMTP 服务并获取授权码
+- 授权码获取方法：登录 163 邮箱 → 设置 → POP3/SMTP/IMAP → 开启服务 → 获取授权码
+
+### 2. OCR 模型
+
+验证码识别使用 ddddocr 的默认模式，无需额外配置。如果需要使用自定义模型，请将模型文件放在 `models/` 目录下。
+
+## 🚀 使用方法
+
+### 基本用法
+
+```bash
+python main.py --username your_email@mails.ucas.ac.cn --password your_password --courseID 180088071200MX037H
 ```
-models/  
-  |---- ocr_1.0_299_3000_2023-06-07-12-34-41.onnx 
-  |---- charsets.json
+
+### 参数说明
+
+| 参数 | 说明 | 是否必需 | 示例 |
+|------|------|----------|------|
+| `--username` | UCAS 用户名（邮箱） | ✅ 必需 | `zhangsan@mails.ucas.ac.cn` |
+| `--password` | UCAS 密码 | ✅ 必需 | `your_password` |
+| `--courseID` | 课程编码 | ✅ 必需 | `180088071200MX037H` |
+| `--noCaptcha` | 无验证码模式（暂未使用） | ❌ 可选 | - |
+
+### 完整示例
+
+```bash
+python main.py \
+  --username hangbozhu25@mails.ucas.ac.cn \
+  --password "zhb@20030616/" \
+  --courseID 180088071200MX037H
 ```
 
+**注意：**
+- 不再需要 `subjectID` 参数，脚本会直接通过课程编码查询
+- 参数顺序可以任意调整
+- 如果密码包含特殊字符，建议用引号括起来
 
-模型权重文件在models文件夹中，识别带个位数字带运算符的验证码准确率达到99%以上  
+## 📖 工作流程
 
-## 5.课程编码位置 
-<div  align="center">
-  <img src="./temp/屏幕截图%202023-06-08%20094338.jpg" alt="img" width="100%" />
+```
+1. 自动登录 UCAS 系统
+   ├─ 最多尝试 10 次登录
+   └─ 自动检测登录状态
+
+2. 点击"选课"链接进入选课系统
+   └─ 自动切换到新标签页
+
+3. 点击"新增加本学期研究生课程"按钮
+   └─ 多种定位方式确保成功
+
+4. 输入课程编码并查询
+   └─ 只查询一次，不重复输入
+
+5. 循环监控课程是否有空位
+   ├─ 每 1.5 秒刷新一次
+   └─ 发现空位立即选择
+
+6. 自动识别验证码
+   ├─ 使用 ddddocr 识别纯数字
+   ├─ 支持前导零（如 07076）
+   └─ 识别失败自动刷新验证码
+
+7. 提交选课申请
+   ├─ 验证码错误自动重试
+   └─ 最多尝试 10 次提交
+
+8. 发送邮件通知选课结果
+   └─ HTML 格式精美邮件
+```
+
+## 📧 邮件通知
+
+### 成功邮件示例
+
+```
+✅ 选课成功！
+课程编码：180088071200MX037H
+选课时间：2026-01-21 21:30:00
+恭喜您成功抢到课程！
+```
+
+### 失败邮件示例
+
+```
+❌ 选课失败
+课程编码：180088071200MX037H
+时间：2026-01-21 21:30:00
+选课未能成功，请手动检查。
+```
+
+## 🐛 调试
+
+如果脚本运行出错，会自动保存以下调试文件：
+
+| 文件名 | 说明 |
+|--------|------|
+| `debug_page.html` | 点击"新增加本学期研究生课程"按钮失败时保存 |
+| `debug_course_query.html` | 查询课程失败时保存 |
+| `debug_submit_error.html` | 提交选课失败时保存 |
+| `debug_ocr_failed.html` | 验证码识别失败时保存 |
+| `ocrCal.png` | 最后一次识别的验证码图片 |
+
+## ⚠️ 注意事项
+
+1. **密码安全**：不要将密码硬编码在脚本中，建议使用环境变量
+2. **授权码**：邮箱配置中的 `SENDER_PASSWORD` 必须是授权码，不是登录密码
+3. **刷新频率**：当前设置为 1.5 秒刷新一次（`main.py` 第 288 行），可根据实际情况调整
+   ```python
+   # 实际选课的时候这里要加强！！！缩短点 不然抢不过他们
+   sleep(1.5)  # 可以调整为 0.5-1 秒
+   ```
+4. **浏览器窗口**：脚本执行完成后浏览器窗口会保持打开，方便查看结果
+5. **验证码识别**：默认使用 ddddocr 识别纯数字验证码，识别准确率较高
+6. **网络环境**：建议在校园网环境下运行，确保网络稳定
+
+## 🔄 重试机制
+
+| 重试类型 | 最大次数 | 说明 |
+|---------|---------|------|
+| 登录重试 | 10 次 | 登录失败自动重试 |
+| OCR 识别重试 | 5 次/提交 | 每次提交最多识别 5 次验证码 |
+| 提交重试 | 10 次 | 验证码错误自动刷新页面重新提交 |
+
+## 📂 项目结构
+
+```
+UCAS-Course-selection-script/
+├── main.py              # 主程序
+├── utils.py             # 工具函数
+├── .env                 # 邮箱配置（需自行创建）
+├── requirements.txt     # 依赖列表
+├── README.md            # 项目说明
+└── models/              # OCR 模型文件（可选）
+    ├── charsets.json
+    └── ocr_1.0_299_3000_2023-06-07-12-34-41.onnx
+```
+
+## 🎯 课程编码查找
+
+### 方法 1：选课页面查找
+
+<div align="center">
+  <img src="./temp/屏幕截图%202023-06-08%20094338.jpg" alt="课程编码位置1" width="100%" />
 </div>
-或者  
-<div  align="center">
-  <img src="./temp/屏幕截图%202023-06-08%20092924.jpg" alt="img" width="100%" />
-</div>  
+
+### 方法 2：学期课表查找
+
+<div align="center">
+  <img src="./temp/屏幕截图%202023-06-08%20092924.jpg" alt="课程编码位置2" width="100%" />
+</div>
+
+## ⚡ 性能优化建议
+
+### 1. 提高抢课成功率
+
+编辑 `main.py` 第 288 行，缩短刷新间隔：
+
+```python
+# 课程已满时的刷新间隔
+sleep(1.5)  # 可以改为 0.5-1 秒
+```
+
+**注意**：间隔太短可能触发服务器限制，建议根据实际情况调整。
+
+### 2. 验证码识别优化
+
+- 如果默认 OCR 识别效果不好，可以训练自定义模型
+- 使用 [dddd_trainer](https://github.com/sml2h3/dddd_trainer) 训练
+- 保存识别失败的验证码图片用于分析
+
+### 3. 网络优化
+
+- 确保网络环境稳定
+- 建议在校园网环境下运行
+- 避免使用 VPN 或代理
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📞 常见问题
+
+### Q: 登录失败怎么办？
+A:
+1. 检查用户名和密码是否正确
+2. 确保账号未被锁定
+3. 查看日志中的错误信息
+
+### Q: 验证码识别一直失败？
+A:
+1. ddddocr 对纯数字验证码识别率很高
+2. 查看保存的 `ocrCal.png` 图片，确认是否是纯数字
+3. 检查验证码图片是否清晰
+
+### Q: 邮件发送失败？
+A:
+1. 检查 `.env` 文件中的邮箱配置
+2. 确认使用的是授权码而不是登录密码
+3. 确保开启了 SMTP 服务
+
+### Q: 课程一直显示已满？
+A:
+1. 可能是课程确实没有空位
+2. 脚本会持续监控直到有空位
+3. 可以缩短刷新间隔提高成功率
+
+### Q: 脚本运行后没有反应？
+A:
+1. 检查 Chrome 浏览器是否正常启动
+2. 查看控制台日志输出
+3. 检查 ChromeDriver 是否安装成功
+
+## 📄 许可证
+
+MIT License
+
+---
+
+## 🔗 相关链接
+
+- [ddddocr - 验证码识别库](https://github.com/sml2h3/ddddocr)
+- [dddd_trainer - 模型训练工具](https://github.com/sml2h3/dddd_trainer)
+- [Selenium 文档](https://www.selenium.dev/documentation/)
+
+---
+
+**免责声明**：
+本脚本仅供学习和研究使用，请遵守学校选课系统的使用规定。
+禁止恶意抢课，使用本脚本造成的任何后果由使用者自行承担。
+
+**注意**：
+目前脚本已在非高峰时期测试通过，帮助大家捡漏有人退课的课程。
+在高峰期间使用可能需要调整 sleep 时间等参数。
+如有 bug，欢迎发起 issue。
