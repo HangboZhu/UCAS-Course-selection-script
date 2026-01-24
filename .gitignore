@@ -4,3 +4,8 @@ __pycache__/utils.cpython-311.pyc
 test.py
 ocrCal.png
 ocrCal.png
+
+./models
+.env
+
+.gitignore
