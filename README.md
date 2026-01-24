@@ -78,7 +78,7 @@ python main.py --username your_email@mails.ucas.ac.cn --password your_password -
 ```bash
 python main.py \
   --username aaa@mails.ucas.ac.cn \
-  --password "aaaa" \
+  --password "aaa" \
   --courseID 180088071200MX037H
 ```
 
